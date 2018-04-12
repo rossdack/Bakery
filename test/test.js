@@ -69,16 +69,16 @@ describe('PackageService', function() {
 
             it('should fail gracefully', function(){
                 // not a known package size
-                assert.deepEqual(packageServiceInstance.calculatePackages(validProductScroll, 1).getTotalPrice(), 0, 'Expected price of 0 as individual items are ');
+                assert.deepEqual(packageServiceInstance.calculatePackages(validProductScroll, 1).getTotalPrice(), 0, 'Expected price of 0 as individual items are not supported');
 
                 // not a positive integer
-                assert.deepEqual(packageServiceInstance.calculatePackages(validProductScroll, -1).getTotalPrice(), 0, 'Expected price of 0 as individual items are ');
+                assert.deepEqual(packageServiceInstance.calculatePackages(validProductScroll, -1).getTotalPrice(), 0, 'Expected price of 0 as negative numbers are not supported');
 
                 // not an integer
-                assert.deepEqual(packageServiceInstance.calculatePackages(validProductScroll, 'hello').getTotalPrice(), 0, 'Expected price of 0 as individual items are ');
+                assert.deepEqual(packageServiceInstance.calculatePackages(validProductScroll, 'hello').getTotalPrice(), 0, 'Expected price of 0 as item was not an integer');
 
                 // control char
-                assert.deepEqual(packageServiceInstance.calculatePackages(validProductScroll, '\n').getTotalPrice(), 0, 'Expected price of 0 as individual items are ');
+                assert.deepEqual(packageServiceInstance.calculatePackages(validProductScroll, '\n').getTotalPrice(), 0, 'Expected price of 0 aas item was not an integer');
             })
         });
     });
