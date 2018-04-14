@@ -1,12 +1,12 @@
 // reading this file synchronously as it is a known size
 const products = require('./products');
 const PackageService = require('./PackageService');
-const orderFileName = './datafile';
+const defaultOrderFileName = './datafile';
 
 let fs = require('fs');
 
 /**
- * A solution for bakery challenge, expanded to allow testing
+ * A solution for the bakery challenge, expanded to allow testing
  */
 class Bakery {
 
@@ -15,19 +15,37 @@ class Bakery {
     }
 
     readOrderFile() {
-        let orderContent = fs.readFileSync(orderFileName);
-        orderContent = orderContent ? orderContent.toString() : '';
+        var self = this;
 
-        // Remove any empty lines
-        let lines = orderContent.split(/\r\n|\n/).filter(line => {
-            return line && line.trim();
+        // could use Yargs module for this
+        let args = process.argv.slice(2);
+        let fileSpecified = args[0];
+
+        let orderFileName = fileSpecified || defaultOrderFileName;
+
+        fs.stat(orderFileName, function (err, stat) {
+            if (err == null) {
+
+                let orderContent = fs.readFileSync(orderFileName);
+                orderContent = orderContent ? orderContent.toString() : '';
+
+                // Remove any empty lines
+                let orderLines = orderContent.split(/\r\n|\n/).filter(line => {
+                    return line && line.trim();
+                });
+
+                self.processOrderFile(orderLines);
+            } else if (err.code == 'ENOENT') {
+                console.log('Cannot find file \'%s\'', orderFileName);
+
+            } else {
+                console.log('Unknown error: ', err.code);
+            }
         });
-        return lines;
     }
 
-    processOrder() {
+    processOrderFile(orders) {
         let self = this;
-        let orders = this.readOrderFile();
 
         orders.forEach(function (lineItem){
             var that = this;
@@ -69,4 +87,4 @@ class Bakery {
 }
 
 var aBakery = new Bakery();
-aBakery.processOrder();
+aBakery.readOrderFile();

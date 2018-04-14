@@ -1,10 +1,11 @@
 /**
  * Standalone solution for bakery challenge
  */
+let fs = require('fs');
 
 // reading this file synchronously as it is a known size
 const products = require('./products');
-const orderFileName = 'datafile';
+const defaultOrderFileName = 'datafile';
 
 const MAGENTA = '\x1b[35m';
 const WHITE = '\x1b[37m';
@@ -13,46 +14,70 @@ const RED = '\x1b[31m';
 const GREEN = '\x1b[32m';
 const YELLOW = '\x1b[33m';
 
-let fs = require('fs');
-let readStream = fs.createReadStream(orderFileName);
-let data = '';
+let orderFileName = '';
 
-// read file as a stream - file could potentially be huge
-readStream.on('data', function (input) {
-    data = (input.toString().split(/\r\n|\n/).filter(line => {
-        return line && line.trim();
-    }))
-}).on('end', function () {
+// could use Yargs module for this
+let args = process.argv.slice(2);
+let fileSpecified = args[0];
 
-    data.forEach(function (lineItem) {
-        let items = lineItem.split(" ");
-        let orderQuantity = items[0];
-        let orderProduct = items[1];
+orderFileName = fileSpecified || defaultOrderFileName;
 
-        let stockItem = products.find((x) => {
-            return x.itemCode === orderProduct;
-        });
+fs.stat(orderFileName, function (err, stat) {
+    if (err == null) {
+        processFile(orderFileName);
+    } else if (err.code == 'ENOENT') {
+        console.log('Cannot find file \'%s\'', orderFileName);
 
-        if (stockItem) {
+    } else {
+        console.log('Unknown error: ', err.code);
+    }
+});
 
-            let packageDenominations = new Array();
-            stockItem.packs.forEach(function (x) {
-                packageDenominations.push(x.packSize);
+/**
+ *
+ * @param orderFileName
+ */
+function processFile(orderFileName) {
+    let readStream = fs.createReadStream(orderFileName);
+    let data = '';
+
+    // read file as a stream - file could potentially be huge
+    readStream.on('data', function (input) {
+        data = (input.toString().split(/\r\n|\n/).filter(line => {
+            return line && line.trim();
+        }))
+    }).on('end', function () {
+
+        data.forEach(function (lineItem) {
+            let items = lineItem.split(" ");
+            let orderQuantity = items[0];
+            let orderProduct = items[1];
+
+            let stockItem = products.find((x) => {
+                return x.itemCode === orderProduct;
             });
 
-            console.log(RED, 'Item', stockItem.name, 'found in stock');
-            console.log('', 'This comes in pack sizes of ' + packageDenominations + ' and the order is for ' + orderQuantity + ' items' + WHITE);
+            if (stockItem) {
 
-            // sort package by largest first to meet test requirements (assuming these were defined as integers)
-            calculatePackages(stockItem.packs.sort(sortPacks), orderQuantity);
-            console.log();
+                let packageDenominations = new Array();
+                stockItem.packs.forEach(function (x) {
+                    packageDenominations.push(x.packSize);
+                });
 
-        } else {
-            console.log('Could not find %s in stock', orderProduct);
-        }
+                console.log(RED, 'Item', stockItem.name, 'found in stock');
+                console.log('', 'This comes in pack sizes of ' + packageDenominations + ' and the order is for ' + orderQuantity + ' items' + WHITE);
 
+                // sort package by largest first to meet test requirements (assuming these were defined as integers)
+                calculatePackages(stockItem.packs.sort(sortPacks), orderQuantity);
+                console.log();
+
+            } else {
+                console.log('Could not find %s in stock', orderProduct);
+            }
+
+        });
     });
-});
+};
 
 /**
  * Sort packages in descending order by pack size
