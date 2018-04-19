@@ -46,8 +46,11 @@ class Bakery {
 
     processOrderFile(orders) {
         let self = this;
+        let grandTotalItems = 0;
+        let grandTotalPrice = 0.0;
+        const deliveryPricePerItem = 1.25;
 
-        orders.forEach(function (lineItem){
+        orders.forEach(function (lineItem) {
             var that = this;
             let items = lineItem.split(" ");
             let orderQuantity = items[0];
@@ -67,11 +70,14 @@ class Bakery {
                 // sort package by largest first to meet test requirements (assuming these were defined as integers)
                 let orderLine = that.packageService.calculatePackages(itemInStock.packs, orderQuantity);
 
+                grandTotalItems += orderLine.getQuantity();
+                grandTotalPrice += orderLine.getTotalPrice();
+
                 console.log(orderQuantity, orderProduct, '$' + orderLine.getTotalPrice().toFixed(2));
 
                 let packs = orderLine.getItemPacks();
-                packs.forEach(function(pack) {
-                   console.log('       ', pack.getQuantity(), 'x', pack.getPackSize(), '$' + pack.getUnitPrice());
+                packs.forEach(function (pack) {
+                    console.log('       ', pack.getQuantity(), 'x', pack.getPackSize(), '$' + pack.getUnitPrice());
                 });
 
                 console.log();
@@ -82,6 +88,22 @@ class Bakery {
 
         }, self);
 
+        if (grandTotalItems === 0) {
+            console.log('Sorry, the order could not be fulfilled due to a mis-match between order quantity and pack' +
+                ' size')
+        } else {
+
+            console.log('Total number of individual items in order:', grandTotalItems);
+            console.log('Total price of items: $', grandTotalPrice);
+
+            if (grandTotalItems < 10) {
+                console.log('Free shipping discount applies:');
+            } else {
+                let shippingPrice = deliveryPricePerItem * grandTotalItems;
+                console.log('+ Shipping Price: $', shippingPrice);
+                console.log('Grand Total: $', shippingPrice + grandTotalPrice);
+            }
+        }
     }
 
 }

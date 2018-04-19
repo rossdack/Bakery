@@ -6,15 +6,21 @@ class OrderLine {
     constructor() {
         this.totalPrice = 0;
         this.packages = [];
+        this.totalQuantity = 0;
     }
 
     addItemPack(quantity, packSize, unitPrice) {
+        this.totalQuantity += (quantity * packSize);
         this.totalPrice += (unitPrice * quantity);
         this.packages.push(new OrderPack(quantity, packSize, unitPrice));
     }
 
     getItemPacks() {
         return this.packages;
+    }
+
+    getQuantity() {
+        return this.totalQuantity;
     }
 
     getTotalPrice() {
